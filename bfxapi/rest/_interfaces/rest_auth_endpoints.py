@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Literal
 
 from bfxapi.rest._interface import Interface
 from bfxapi.types import (
@@ -43,7 +43,7 @@ class RestAuthEndpoints(Interface):
     def get_user_info(self) -> UserInfo:
         return serializers.UserInfo.parse(*self._m.post("auth/r/info/user"))
 
-    def get_login_history(self) -> List[LoginHistory]:
+    def get_login_history(self) -> list[LoginHistory]:
         return [
             serializers.LoginHistory.parse(*sub_data)
             for sub_data in self._m.post("auth/r/logins/hist")
@@ -54,25 +54,31 @@ class RestAuthEndpoints(Interface):
         symbol: str,
         type: str,
         *,
-        dir: Optional[int] = None,
-        rate: Optional[str] = None,
-        lev: Optional[str] = None,
+        dir: int | None = None,
+        rate: str | None = None,
+        lev: str | None = None,
     ) -> BalanceAvailable:
-        body = {"symbol": symbol, "type": type, "dir": dir, "rate": rate, "lev": lev}
+        body = {
+            "symbol": symbol,
+            "type": type,
+            "dir": dir,
+            "rate": rate,
+            "lev": lev,
+        }
 
         return serializers.BalanceAvailable.parse(
             *self._m.post("auth/calc/order/avail", body=body)
         )
 
-    def get_wallets(self) -> List[Wallet]:
+    def get_wallets(self) -> list[Wallet]:
         return [
             serializers.Wallet.parse(*sub_data)
             for sub_data in self._m.post("auth/r/wallets")
         ]
 
     def get_orders(
-        self, *, symbol: Optional[str] = None, ids: Optional[List[str]] = None
-    ) -> List[Order]:
+        self, *, symbol: str | None = None, ids: list[str] | None = None
+    ) -> list[Order]:
         if symbol is None:
             endpoint = "auth/r/orders"
         else:
@@ -87,18 +93,18 @@ class RestAuthEndpoints(Interface):
         self,
         type: str,
         symbol: str,
-        amount: Union[str, float, Decimal],
-        price: Union[str, float, Decimal],
+        amount: str | float | Decimal,
+        price: str | float | Decimal,
         *,
-        lev: Optional[int] = None,
-        price_trailing: Optional[Union[str, float, Decimal]] = None,
-        price_aux_limit: Optional[Union[str, float, Decimal]] = None,
-        price_oco_stop: Optional[Union[str, float, Decimal]] = None,
-        gid: Optional[int] = None,
-        cid: Optional[int] = None,
-        flags: Optional[int] = None,
-        tif: Optional[str] = None,
-        meta: Optional[Dict[str, Any]] = None,
+        lev: int | None = None,
+        price_trailing: str | float | Decimal | None = None,
+        price_aux_limit: str | float | Decimal | None = None,
+        price_oco_stop: str | float | Decimal | None = None,
+        gid: int | None = None,
+        cid: int | None = None,
+        flags: int | None = None,
+        tif: str | None = None,
+        meta: dict[str, Any] | None = None,
     ) -> Notification[Order]:
         body = {
             "type": type,
@@ -124,17 +130,17 @@ class RestAuthEndpoints(Interface):
         self,
         id: int,
         *,
-        amount: Optional[Union[str, float, Decimal]] = None,
-        price: Optional[Union[str, float, Decimal]] = None,
-        cid: Optional[int] = None,
-        cid_date: Optional[str] = None,
-        gid: Optional[int] = None,
-        flags: Optional[int] = None,
-        lev: Optional[int] = None,
-        delta: Optional[Union[str, float, Decimal]] = None,
-        price_aux_limit: Optional[Union[str, float, Decimal]] = None,
-        price_trailing: Optional[Union[str, float, Decimal]] = None,
-        tif: Optional[str] = None,
+        amount: str | float | Decimal | None = None,
+        price: str | float | Decimal | None = None,
+        cid: int | None = None,
+        cid_date: str | None = None,
+        gid: int | None = None,
+        flags: int | None = None,
+        lev: int | None = None,
+        delta: str | float | Decimal | None = None,
+        price_aux_limit: str | float | Decimal | None = None,
+        price_trailing: str | float | Decimal | None = None,
+        tif: str | None = None,
     ) -> Notification[Order]:
         body = {
             "id": id,
@@ -158,39 +164,40 @@ class RestAuthEndpoints(Interface):
     def cancel_order(
         self,
         *,
-        id: Optional[int] = None,
-        cid: Optional[int] = None,
-        cid_date: Optional[str] = None,
+        id: int | None = None,
+        cid: int | None = None,
+        cid_date: str | None = None,
     ) -> Notification[Order]:
         return _Notification[Order](serializers.Order).parse(
             *self._m.post(
-                "auth/w/order/cancel", body={"id": id, "cid": cid, "cid_date": cid_date}
+                "auth/w/order/cancel",
+                body={"id": id, "cid": cid, "cid_date": cid_date},
             )
         )
 
     def cancel_order_multi(
         self,
         *,
-        id: Optional[List[int]] = None,
-        cid: Optional[List[Tuple[int, str]]] = None,
-        gid: Optional[List[int]] = None,
-        all: Optional[bool] = None,
-    ) -> Notification[List[Order]]:
+        id: list[int] | None = None,
+        cid: list[tuple[int, str]] | None = None,
+        gid: list[int] | None = None,
+        all: bool | None = None,
+    ) -> Notification[list[Order]]:
         body = {"id": id, "cid": cid, "gid": gid, "all": all}
 
-        return _Notification[List[Order]](serializers.Order, is_iterable=True).parse(
-            *self._m.post("auth/w/order/cancel/multi", body=body)
-        )
+        return _Notification[list[Order]](
+            serializers.Order, is_iterable=True
+        ).parse(*self._m.post("auth/w/order/cancel/multi", body=body))
 
     def get_orders_history(
         self,
         *,
-        symbol: Optional[str] = None,
-        ids: Optional[List[int]] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Order]:
+        symbol: str | None = None,
+        ids: list[int] | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[Order]:
         if symbol is None:
             endpoint = "auth/r/orders/hist"
         else:
@@ -203,7 +210,7 @@ class RestAuthEndpoints(Interface):
             for sub_data in self._m.post(endpoint, body=body)
         ]
 
-    def get_order_trades(self, symbol: str, id: int) -> List[OrderTrade]:
+    def get_order_trades(self, symbol: str, id: int) -> list[OrderTrade]:
         return [
             serializers.OrderTrade.parse(*sub_data)
             for sub_data in self._m.post(f"auth/r/order/{symbol}:{id}/trades")
@@ -212,12 +219,12 @@ class RestAuthEndpoints(Interface):
     def get_trades_history(
         self,
         *,
-        symbol: Optional[str] = None,
-        sort: Optional[int] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Trade]:
+        symbol: str | None = None,
+        sort: int | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[Trade]:
         if symbol is None:
             endpoint = "auth/r/trades/hist"
         else:
@@ -232,19 +239,24 @@ class RestAuthEndpoints(Interface):
 
     def get_ledgers(
         self,
-        currency: Optional[str] = None,
+        currency: str | None = None,
         *,
-        category: Optional[int] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Ledger]:
+        category: int | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[Ledger]:
         if currency is None:
             endpoint = "auth/r/ledgers/hist"
         else:
             endpoint = f"auth/r/ledgers/{currency}/hist"
 
-        body = {"category": category, "start": start, "end": end, "limit": limit}
+        body = {
+            "category": category,
+            "start": start,
+            "end": end,
+            "limit": limit,
+        }
 
         return [
             serializers.Ledger.parse(*sub_data)
@@ -261,36 +273,41 @@ class RestAuthEndpoints(Interface):
             *self._m.post(f"auth/r/info/margin/{symbol}")
         )
 
-    def get_all_symbols_margin_info(self) -> List[SymbolMarginInfo]:
+    def get_all_symbols_margin_info(self) -> list[SymbolMarginInfo]:
         return [
             serializers.SymbolMarginInfo.parse(*sub_data)
             for sub_data in self._m.post("auth/r/info/margin/sym_all")
         ]
 
-    def get_positions(self) -> List[Position]:
+    def get_positions(self) -> list[Position]:
         return [
             serializers.Position.parse(*sub_data)
             for sub_data in self._m.post("auth/r/positions")
         ]
 
     def claim_position(
-        self, id: int, *, amount: Optional[Union[str, float, Decimal]] = None
+        self, id: int, *, amount: str | float | Decimal | None = None
     ) -> Notification[PositionClaim]:
         return _Notification[PositionClaim](serializers.PositionClaim).parse(
-            *self._m.post("auth/w/position/claim", body={"id": id, "amount": amount})
+            *self._m.post(
+                "auth/w/position/claim", body={"id": id, "amount": amount}
+            )
         )
 
     def increase_position(
-        self, symbol: str, amount: Union[str, float, Decimal]
+        self, symbol: str, amount: str | float | Decimal
     ) -> Notification[PositionIncrease]:
-        return _Notification[PositionIncrease](serializers.PositionIncrease).parse(
+        return _Notification[PositionIncrease](
+            serializers.PositionIncrease
+        ).parse(
             *self._m.post(
-                "auth/w/position/increase", body={"symbol": symbol, "amount": amount}
+                "auth/w/position/increase",
+                body={"symbol": symbol, "amount": amount},
             )
         )
 
     def get_increase_position_info(
-        self, symbol: str, amount: Union[str, float, Decimal]
+        self, symbol: str, amount: str | float | Decimal
     ) -> PositionIncreaseInfo:
         return serializers.PositionIncreaseInfo.parse(
             *self._m.post(
@@ -302,10 +319,10 @@ class RestAuthEndpoints(Interface):
     def get_positions_history(
         self,
         *,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[PositionHistory]:
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[PositionHistory]:
         return [
             serializers.PositionHistory.parse(*sub_data)
             for sub_data in self._m.post(
@@ -317,10 +334,10 @@ class RestAuthEndpoints(Interface):
     def get_positions_snapshot(
         self,
         *,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[PositionSnapshot]:
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[PositionSnapshot]:
         return [
             serializers.PositionSnapshot.parse(*sub_data)
             for sub_data in self._m.post(
@@ -332,11 +349,11 @@ class RestAuthEndpoints(Interface):
     def get_positions_audit(
         self,
         *,
-        ids: Optional[List[int]] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[PositionAudit]:
+        ids: list[int] | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[PositionAudit]:
         body = {"ids": ids, "start": start, "end": end, "limit": limit}
 
         return [
@@ -345,7 +362,7 @@ class RestAuthEndpoints(Interface):
         ]
 
     def set_derivative_position_collateral(
-        self, symbol: str, collateral: Union[str, float, Decimal]
+        self, symbol: str, collateral: str | float | Decimal
     ) -> DerivativePositionCollateral:
         return serializers.DerivativePositionCollateral.parse(
             *(
@@ -360,10 +377,14 @@ class RestAuthEndpoints(Interface):
         self, symbol: str
     ) -> DerivativePositionCollateralLimits:
         return serializers.DerivativePositionCollateralLimits.parse(
-            *self._m.post("auth/calc/deriv/collateral/limit", body={"symbol": symbol})
+            *self._m.post(
+                "auth/calc/deriv/collateral/limit", body={"symbol": symbol}
+            )
         )
 
-    def get_funding_offers(self, *, symbol: Optional[str] = None) -> List[FundingOffer]:
+    def get_funding_offers(
+        self, *, symbol: str | None = None
+    ) -> list[FundingOffer]:
         if symbol is None:
             endpoint = "auth/r/funding/offers"
         else:
@@ -378,11 +399,11 @@ class RestAuthEndpoints(Interface):
         self,
         type: str,
         symbol: str,
-        amount: Union[str, float, Decimal],
-        rate: Union[str, float, Decimal],
+        amount: str | float | Decimal,
+        rate: str | float | Decimal,
         period: int,
         *,
-        flags: Optional[int] = None,
+        flags: int | None = None,
     ) -> Notification[FundingOffer]:
         body = {
             "type": type,
@@ -402,7 +423,9 @@ class RestAuthEndpoints(Interface):
             *self._m.post("auth/w/funding/offer/cancel", body={"id": id})
         )
 
-    def cancel_all_funding_offers(self, currency: str) -> Notification[Literal[None]]:
+    def cancel_all_funding_offers(
+        self, currency: str
+    ) -> Notification[Literal[None]]:
         return _Notification[Literal[None]](None).parse(
             *self._m.post(
                 "auth/w/funding/offer/cancel/all", body={"currency": currency}
@@ -419,9 +442,9 @@ class RestAuthEndpoints(Interface):
         status: bool,
         currency: str,
         *,
-        amount: Optional[str] = None,
-        rate: Optional[int] = None,
-        period: Optional[int] = None,
+        amount: str | None = None,
+        rate: int | None = None,
+        period: int | None = None,
     ) -> Notification[FundingAutoRenew]:
         body = {
             "status": status,
@@ -431,16 +454,16 @@ class RestAuthEndpoints(Interface):
             "period": period,
         }
 
-        return _Notification[FundingAutoRenew](serializers.FundingAutoRenew).parse(
-            *self._m.post("auth/w/funding/auto", body=body)
-        )
+        return _Notification[FundingAutoRenew](
+            serializers.FundingAutoRenew
+        ).parse(*self._m.post("auth/w/funding/auto", body=body))
 
     def toggle_keep_funding(
         self,
         type: Literal["credit", "loan"],
         *,
-        ids: Optional[List[int]] = None,
-        changes: Optional[Dict[int, Literal[1, 2]]] = None,
+        ids: list[int] | None = None,
+        changes: dict[int, Literal[1, 2]] | None = None,
     ) -> Notification[Literal[None]]:
         return _Notification[Literal[None]](None).parse(
             *self._m.post(
@@ -452,11 +475,11 @@ class RestAuthEndpoints(Interface):
     def get_funding_offers_history(
         self,
         *,
-        symbol: Optional[str] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[FundingOffer]:
+        symbol: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[FundingOffer]:
         if symbol is None:
             endpoint = "auth/r/funding/offers/hist"
         else:
@@ -469,7 +492,9 @@ class RestAuthEndpoints(Interface):
             )
         ]
 
-    def get_funding_loans(self, *, symbol: Optional[str] = None) -> List[FundingLoan]:
+    def get_funding_loans(
+        self, *, symbol: str | None = None
+    ) -> list[FundingLoan]:
         if symbol is None:
             endpoint = "auth/r/funding/loans"
         else:
@@ -483,11 +508,11 @@ class RestAuthEndpoints(Interface):
     def get_funding_loans_history(
         self,
         *,
-        symbol: Optional[str] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[FundingLoan]:
+        symbol: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[FundingLoan]:
         if symbol is None:
             endpoint = "auth/r/funding/loans/hist"
         else:
@@ -501,8 +526,8 @@ class RestAuthEndpoints(Interface):
         ]
 
     def get_funding_credits(
-        self, *, symbol: Optional[str] = None
-    ) -> List[FundingCredit]:
+        self, *, symbol: str | None = None
+    ) -> list[FundingCredit]:
         if symbol is None:
             endpoint = "auth/r/funding/credits"
         else:
@@ -516,11 +541,11 @@ class RestAuthEndpoints(Interface):
     def get_funding_credits_history(
         self,
         *,
-        symbol: Optional[str] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[FundingCredit]:
+        symbol: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[FundingCredit]:
         if symbol is None:
             endpoint = "auth/r/funding/credits/hist"
         else:
@@ -536,12 +561,12 @@ class RestAuthEndpoints(Interface):
     def get_funding_trades_history(
         self,
         *,
-        symbol: Optional[str] = None,
-        sort: Optional[int] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[FundingTrade]:
+        symbol: str | None = None,
+        sort: int | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[FundingTrade]:
         if symbol is None:
             endpoint = "auth/r/funding/trades/hist"
         else:
@@ -565,7 +590,7 @@ class RestAuthEndpoints(Interface):
         to_wallet: str,
         currency: str,
         currency_to: str,
-        amount: Union[str, float, Decimal],
+        amount: str | float | Decimal,
     ) -> Notification[Transfer]:
         body = {
             "from": from_wallet,
@@ -580,7 +605,11 @@ class RestAuthEndpoints(Interface):
         )
 
     def submit_wallet_withdrawal(
-        self, wallet: str, method: str, address: str, amount: Union[str, float, Decimal]
+        self,
+        wallet: str,
+        method: str,
+        address: str,
+        amount: str | float | Decimal,
     ) -> Notification[Withdrawal]:
         body = {
             "wallet": wallet,
@@ -604,7 +633,7 @@ class RestAuthEndpoints(Interface):
         )
 
     def generate_deposit_invoice(
-        self, wallet: str, currency: str, amount: Union[str, float, Decimal]
+        self, wallet: str, currency: str, amount: str | float | Decimal
     ) -> LightningNetworkInvoice:
         return serializers.LightningNetworkInvoice.parse(
             *self._m.post(
@@ -616,11 +645,11 @@ class RestAuthEndpoints(Interface):
     def get_movements(
         self,
         *,
-        currency: Optional[str] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Movement]:
+        currency: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int | None = None,
+    ) -> list[Movement]:
         if currency is None:
             endpoint = "auth/r/movements/hist"
         else:

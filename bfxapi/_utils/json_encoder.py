@@ -1,16 +1,25 @@
 import json
 from decimal import Decimal
-from typing import Any, Dict, List, Union
+from typing import Any
 
-_ExtJSON = Union[
-    Dict[str, "_ExtJSON"], List["_ExtJSON"], bool, int, float, str, Decimal, None
-]
+_ExtJSON = (
+    dict[str, "_ExtJSON"]
+    | list["_ExtJSON"]
+    | bool
+    | int
+    | float
+    | str
+    | Decimal
+    | None
+)
 
-_StrictJSON = Union[Dict[str, "_StrictJSON"], List["_StrictJSON"], int, str, None]
+_StrictJSON = dict[str, "_StrictJSON"] | list["_StrictJSON"] | int | str | None
 
 
-def _clear(dictionary: Dict[str, Any]) -> Dict[str, Any]:
-    return {key: value for key, value in dictionary.items() if value is not None}
+def _clear(dictionary: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value for key, value in dictionary.items() if value is not None
+    }
 
 
 def _adapter(data: _ExtJSON) -> _StrictJSON:

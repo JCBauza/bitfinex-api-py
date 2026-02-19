@@ -1,6 +1,4 @@
-from typing import Literal, TypedDict, Union
-
-Subscription = Union["Ticker", "Trades", "Book", "Candles", "Status"]
+from typing import Literal, TypedDict
 
 Channel = Literal["ticker", "trades", "book", "candles", "status"]
 
@@ -36,3 +34,6 @@ class Status(TypedDict):
     channel: Literal["status"]
     sub_id: str
     key: str
+
+
+Subscription = Ticker | Trades | Book | Candles | Status

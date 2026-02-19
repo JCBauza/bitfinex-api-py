@@ -2,14 +2,23 @@ import hashlib
 import hmac
 import json
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
-from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar, cast
+from typing import (
+    Any,
+    Concatenate,
+    ParamSpec,
+    TypeVar,
+    cast,
+)
 
-from typing_extensions import Concatenate, ParamSpec
-from websockets.client import WebSocketClientProtocol
+from websockets.asyncio.client import ClientConnection
 
-from bfxapi.websocket.exceptions import ActionRequiresAuthentication, ConnectionNotOpen
+from bfxapi.websocket.exceptions import (
+    ActionRequiresAuthentication,
+    ConnectionNotOpen,
+)
 
 _S = TypeVar("_S", bound="Connection")
 
@@ -26,22 +35,24 @@ class Connection(ABC):
 
         self._authentication: bool = False
 
-        self.__protocol: Optional[WebSocketClientProtocol] = None
+        self.__protocol: ClientConnection | None = None
 
     @property
     def open(self) -> bool:
-        return self.__protocol is not None and self.__protocol.open
+        return (
+            self.__protocol is not None and self.__protocol.state.name == "OPEN"
+        )
 
     @property
     def authentication(self) -> bool:
         return self._authentication
 
     @property
-    def _websocket(self) -> WebSocketClientProtocol:
-        return cast(WebSocketClientProtocol, self.__protocol)
+    def _websocket(self) -> ClientConnection:
+        return cast(ClientConnection, self.__protocol)
 
     @_websocket.setter
-    def _websocket(self, protocol: WebSocketClientProtocol) -> None:
+    def _websocket(self, protocol: ClientConnection) -> None:
         self.__protocol = protocol
 
     @abstractmethod
@@ -80,9 +91,9 @@ class Connection(ABC):
 
     @staticmethod
     def _get_authentication_message(
-        api_key: str, api_secret: str, filters: Optional[List[str]] = None
+        api_key: str, api_secret: str, filters: list[str] | None = None
     ) -> str:
-        message: Dict[str, Any] = {
+        message: dict[str, Any] = {
             "event": "auth",
             "filter": filters,
             "apiKey": api_key,

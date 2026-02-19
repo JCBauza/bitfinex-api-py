@@ -1,5 +1,6 @@
+from collections.abc import Awaitable, Callable
 from decimal import Decimal
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 _Handler = Callable[[str, Any], Awaitable[None]]
 
@@ -12,18 +13,18 @@ class BfxWebSocketInputs:
         self,
         type: str,
         symbol: str,
-        amount: Union[str, float, Decimal],
-        price: Union[str, float, Decimal],
+        amount: str | float | Decimal,
+        price: str | float | Decimal,
         *,
-        lev: Optional[int] = None,
-        price_trailing: Optional[Union[str, float, Decimal]] = None,
-        price_aux_limit: Optional[Union[str, float, Decimal]] = None,
-        price_oco_stop: Optional[Union[str, float, Decimal]] = None,
-        gid: Optional[int] = None,
-        cid: Optional[int] = None,
-        flags: Optional[int] = None,
-        tif: Optional[str] = None,
-        meta: Optional[Dict[str, Any]] = None,
+        lev: int | None = None,
+        price_trailing: str | float | Decimal | None = None,
+        price_aux_limit: str | float | Decimal | None = None,
+        price_oco_stop: str | float | Decimal | None = None,
+        gid: int | None = None,
+        cid: int | None = None,
+        flags: int | None = None,
+        tif: str | None = None,
+        meta: dict[str, Any] | None = None,
     ) -> None:
         await self.__handle_websocket_input(
             "on",
@@ -48,17 +49,17 @@ class BfxWebSocketInputs:
         self,
         id: int,
         *,
-        amount: Optional[Union[str, float, Decimal]] = None,
-        price: Optional[Union[str, float, Decimal]] = None,
-        cid: Optional[int] = None,
-        cid_date: Optional[str] = None,
-        gid: Optional[int] = None,
-        flags: Optional[int] = None,
-        lev: Optional[int] = None,
-        delta: Optional[Union[str, float, Decimal]] = None,
-        price_aux_limit: Optional[Union[str, float, Decimal]] = None,
-        price_trailing: Optional[Union[str, float, Decimal]] = None,
-        tif: Optional[str] = None,
+        amount: str | float | Decimal | None = None,
+        price: str | float | Decimal | None = None,
+        cid: int | None = None,
+        cid_date: str | None = None,
+        gid: int | None = None,
+        flags: int | None = None,
+        lev: int | None = None,
+        delta: str | float | Decimal | None = None,
+        price_aux_limit: str | float | Decimal | None = None,
+        price_trailing: str | float | Decimal | None = None,
+        tif: str | None = None,
     ) -> None:
         await self.__handle_websocket_input(
             "ou",
@@ -81,9 +82,9 @@ class BfxWebSocketInputs:
     async def cancel_order(
         self,
         *,
-        id: Optional[int] = None,
-        cid: Optional[int] = None,
-        cid_date: Optional[str] = None,
+        id: int | None = None,
+        cid: int | None = None,
+        cid_date: str | None = None,
     ) -> None:
         await self.__handle_websocket_input(
             "oc", {"id": id, "cid": cid, "cid_date": cid_date}
@@ -92,10 +93,10 @@ class BfxWebSocketInputs:
     async def cancel_order_multi(
         self,
         *,
-        id: Optional[List[int]] = None,
-        cid: Optional[List[Tuple[int, str]]] = None,
-        gid: Optional[List[int]] = None,
-        all: Optional[bool] = None,
+        id: list[int] | None = None,
+        cid: list[tuple[int, str]] | None = None,
+        gid: list[int] | None = None,
+        all: bool | None = None,
     ) -> None:
         await self.__handle_websocket_input(
             "oc_multi", {"id": id, "cid": cid, "gid": gid, "all": all}
@@ -105,11 +106,11 @@ class BfxWebSocketInputs:
         self,
         type: str,
         symbol: str,
-        amount: Union[str, float, Decimal],
-        rate: Union[str, float, Decimal],
+        amount: str | float | Decimal,
+        rate: str | float | Decimal,
         period: int,
         *,
-        flags: Optional[int] = None,
+        flags: int | None = None,
     ) -> None:
         await self.__handle_websocket_input(
             "fon",
@@ -127,4 +128,6 @@ class BfxWebSocketInputs:
         await self.__handle_websocket_input("foc", {"id": id})
 
     async def calc(self, *args: str) -> None:
-        await self.__handle_websocket_input("calc", list(map(lambda arg: [arg], args)))
+        await self.__handle_websocket_input(
+            "calc", list(map(lambda arg: [arg], args))
+        )

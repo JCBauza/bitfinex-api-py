@@ -1,9 +1,9 @@
 import asyncio
 import json
 import uuid
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, cast
 
-import websockets.client
+import websockets.asyncio.client
 from pyee import EventEmitter
 
 from bfxapi._utils.json_decoder import JSONDecoder
@@ -14,7 +14,7 @@ from bfxapi.websocket.subscriptions import Subscription
 _CHECKSUM_FLAG_VALUE = 131_072
 
 
-def _strip(message: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
+def _strip(message: dict[str, Any], keys: list[str]) -> dict[str, Any]:
     return {key: value for key, value in message.items() if key not in keys}
 
 
@@ -25,12 +25,14 @@ class BfxWebSocketBucket(Connection):
         super().__init__(host)
 
         self.__event_emitter = event_emitter
-        self.__pendings: List[Dict[str, Any]] = []
-        self.__subscriptions: Dict[int, Subscription] = {}
+        self.__pendings: list[dict[str, Any]] = []
+        self.__subscriptions: dict[int, Subscription] = {}
 
         self.__condition = asyncio.locks.Condition()
 
-        self.__handler = PublicChannelsHandler(event_emitter=self.__event_emitter)
+        self.__handler = PublicChannelsHandler(
+            event_emitter=self.__event_emitter
+        )
 
     @property
     def count(self) -> int:
@@ -41,13 +43,14 @@ class BfxWebSocketBucket(Connection):
         return self.count == BfxWebSocketBucket.__MAXIMUM_SUBSCRIPTIONS_AMOUNT
 
     @property
-    def ids(self) -> List[str]:
+    def ids(self) -> list[str]:
         return [pending["subId"] for pending in self.__pendings] + [
-            subscription["sub_id"] for subscription in self.__subscriptions.values()
+            subscription["sub_id"]
+            for subscription in self.__subscriptions.values()
         ]
 
     async def start(self) -> None:
-        async with websockets.client.connect(self._host) as websocket:
+        async with websockets.asyncio.client.connect(self._host) as websocket:
             self._websocket = websocket
 
             await self.__recover_state()
@@ -70,11 +73,12 @@ class BfxWebSocketBucket(Connection):
                     ):
                         self.__handler.handle(subscription, message[1:])
 
-    def __on_subscribed(self, message: Dict[str, Any]) -> None:
+    def __on_subscribed(self, message: dict[str, Any]) -> None:
         chan_id = cast(int, message["chan_id"])
 
         subscription = cast(
-            Subscription, _strip(message, keys=["chan_id", "event", "pair", "currency"])
+            Subscription,
+            _strip(message, keys=["chan_id", "event", "pair", "currency"]),
         )
 
         self.__pendings = [
@@ -98,14 +102,16 @@ class BfxWebSocketBucket(Connection):
 
         await self.__set_config([_CHECKSUM_FLAG_VALUE])
 
-    async def __set_config(self, flags: List[int]) -> None:
-        await self._websocket.send(json.dumps({"event": "conf", "flags": sum(flags)}))
+    async def __set_config(self, flags: list[int]) -> None:
+        await self._websocket.send(
+            json.dumps({"event": "conf", "flags": sum(flags)})
+        )
 
     @Connection._require_websocket_connection
     async def subscribe(
-        self, channel: str, sub_id: Optional[str] = None, **kwargs: Any
+        self, channel: str, sub_id: str | None = None, **kwargs: Any
     ) -> None:
-        subscription: Dict[str, Any] = {
+        subscription: dict[str, Any] = {
             **kwargs,
             "event": "subscribe",
             "channel": channel,

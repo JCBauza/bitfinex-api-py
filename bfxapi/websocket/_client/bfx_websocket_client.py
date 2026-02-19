@@ -6,11 +6,11 @@ from asyncio import Task
 from datetime import datetime
 from logging import Logger
 from socket import gaierror
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, TypedDict
 
-import websockets
-import websockets.client
-from websockets.exceptions import ConnectionClosedError, InvalidStatusCode
+import websockets.asyncio.client
+import websockets.frames
+from websockets.exceptions import ConnectionClosedError, InvalidStatus
 
 from bfxapi._utils.json_encoder import JSONEncoder
 from bfxapi.exceptions import InvalidCredentialError
@@ -28,13 +28,18 @@ from bfxapi.websocket.exceptions import (
 from .bfx_websocket_bucket import BfxWebSocketBucket
 from .bfx_websocket_inputs import BfxWebSocketInputs
 
-_Credentials = TypedDict(
-    "_Credentials", {"api_key": str, "api_secret": str, "filters": Optional[List[str]]}
-)
 
-_Reconnection = TypedDict(
-    "_Reconnection", {"attempts": int, "reason": str, "timestamp": datetime}
-)
+class _Credentials(TypedDict):
+    api_key: str
+    api_secret: str
+    filters: list[str] | None
+
+
+class _Reconnection(TypedDict):
+    attempts: int
+    reason: str
+    timestamp: datetime
+
 
 _DEFAULT_LOGGER = Logger("bfxapi.websocket._client", level=0)
 
@@ -72,17 +77,21 @@ class BfxWebSocketClient(Connection):
         self,
         host: str,
         *,
-        credentials: Optional[_Credentials] = None,
-        timeout: Optional[int] = 60 * 15,
+        credentials: _Credentials | None = None,
+        timeout: int | None = 60 * 15,
         logger: Logger = _DEFAULT_LOGGER,
     ) -> None:
         super().__init__(host)
 
-        self.__credentials, self.__timeout, self.__logger = credentials, timeout, logger
+        self.__credentials, self.__timeout, self.__logger = (
+            credentials,
+            timeout,
+            logger,
+        )
 
-        self.__buckets: Dict[BfxWebSocketBucket, Optional[Task]] = {}
+        self.__buckets: dict[BfxWebSocketBucket, Task | None] = {}
 
-        self.__reconnection: Optional[_Reconnection] = None
+        self.__reconnection: _Reconnection | None = None
 
         self.__event_emitter = BfxEventEmitter(loop=None)
 
@@ -100,7 +109,7 @@ class BfxWebSocketClient(Connection):
                 type(exception), exception, exception.__traceback__
             )
 
-            self.__logger.critical(f"{header}\n" + str().join(stack_trace)[:-1])
+            self.__logger.critical(f"{header}\n" + "".join(stack_trace)[:-1])
 
     @property
     def inputs(self) -> BfxWebSocketInputs:
@@ -112,7 +121,7 @@ class BfxWebSocketClient(Connection):
     async def start(self) -> None:
         _delay = _Delay(backoff_factor=1.618)
 
-        _sleep: Optional[Task] = None
+        _sleep: Task | None = None
 
         def _on_timeout():
             if not self.open:
@@ -133,14 +142,22 @@ class BfxWebSocketClient(Connection):
 
             try:
                 await self.__connect()
-            except (ConnectionClosedError, InvalidStatusCode, gaierror) as error:
+            except (
+                ConnectionClosedError,
+                InvalidStatus,
+                gaierror,
+            ) as error:
 
                 async def _cancel(task: Task) -> None:
                     task.cancel()
 
                     try:
                         await task
-                    except (ConnectionClosedError, InvalidStatusCode, gaierror) as _e:
+                    except (
+                        ConnectionClosedError,
+                        InvalidStatus,
+                        gaierror,
+                    ) as _e:
                         nonlocal error
 
                         if type(error) is not type(_e) or error.args != _e.args:
@@ -154,25 +171,34 @@ class BfxWebSocketClient(Connection):
 
                         await _cancel(task)
 
-                if isinstance(error, ConnectionClosedError) and error.code in (
-                    1006,
-                    1012,
+                if (
+                    isinstance(error, ConnectionClosedError)
+                    and error.rcvd
+                    and error.rcvd.code
+                    in (
+                        1006,
+                        1012,
+                    )
                 ):
-                    if error.code == 1006:
-                        self.__logger.error("Connection lost: trying to reconnect...")
+                    if error.rcvd.code == 1006:
+                        self.__logger.error(
+                            "Connection lost: trying to reconnect..."
+                        )
 
-                    if error.code == 1012:
+                    if error.rcvd.code == 1012:
                         self.__logger.warning(
                             "WSS server is restarting: all "
                             "clients need to reconnect (server sent 20051)."
                         )
 
                     if self.__timeout:
-                        asyncio.get_event_loop().call_later(self.__timeout, _on_timeout)
+                        asyncio.get_event_loop().call_later(
+                            self.__timeout, _on_timeout
+                        )
 
                     self.__reconnection = {
                         "attempts": 1,
-                        "reason": error.reason,
+                        "reason": error.rcvd.reason,
                         "timestamp": datetime.now(),
                     }
 
@@ -180,7 +206,10 @@ class BfxWebSocketClient(Connection):
 
                     _delay.reset()
                 elif (
-                    (isinstance(error, InvalidStatusCode) and error.status_code == 408)
+                    (
+                        isinstance(error, InvalidStatus)
+                        and error.response.status_code == 408
+                    )
                     or isinstance(error, gaierror)
                 ) and self.__reconnection:
                     self.__logger.warning(
@@ -199,16 +228,23 @@ class BfxWebSocketClient(Connection):
                     raise error
 
             if not self.__reconnection:
+                close_code = None
+                close_reason = ""
+                if self._websocket.close_code is not None:
+                    close_code = self._websocket.close_code
+                if self._websocket.close_reason is not None:
+                    close_reason = self._websocket.close_reason
+
                 self.__event_emitter.emit(
                     "disconnected",
-                    self._websocket.close_code,
-                    self._websocket.close_reason,
+                    close_code,
+                    close_reason,
                 )
 
                 break
 
     async def __connect(self) -> None:
-        async with websockets.client.connect(self._host) as websocket:
+        async with websockets.asyncio.client.connect(self._host) as websocket:
             if self.__reconnection:
                 self.__logger.warning(
                     "Reconnection attempt successful (no."
@@ -224,7 +260,9 @@ class BfxWebSocketClient(Connection):
                 self.__buckets[bucket] = asyncio.create_task(bucket.start())
 
             if len(self.__buckets) == 0 or (
-                await asyncio.gather(*[bucket.wait() for bucket in self.__buckets])
+                await asyncio.gather(
+                    *[bucket.wait() for bucket in self.__buckets]
+                )
             ):
                 self.__event_emitter.emit("open")
 
@@ -247,9 +285,12 @@ class BfxWebSocketClient(Connection):
                                 f"to resolve this error (client version: 2, server "
                                 f"version: {message['version']})."
                             )
-                    elif message["event"] == "info" and message["code"] == 20051:
+                    elif (
+                        message["event"] == "info" and message["code"] == 20051
+                    ):
                         rcvd = websockets.frames.Close(
-                            1012, "Stop/Restart WebSocket Server (please reconnect)."
+                            1012,
+                            "Stop/Restart WebSocket Server (please reconnect).",
                         )
 
                         raise ConnectionClosedError(rcvd=rcvd, sent=None)
@@ -281,7 +322,7 @@ class BfxWebSocketClient(Connection):
 
     @Connection._require_websocket_connection
     async def subscribe(
-        self, channel: str, sub_id: Optional[str] = None, **kwargs: Any
+        self, channel: str, sub_id: str | None = None, **kwargs: Any
     ) -> None:
         if channel not in ["ticker", "trades", "book", "candles", "status"]:
             raise UnknownChannelError(
@@ -330,22 +371,29 @@ class BfxWebSocketClient(Connection):
         for bucket in self.__buckets:
             await bucket.close(code=code, reason=reason)
 
-        if self._websocket.open:
+        if self.open:
             await self._websocket.close(code=code, reason=reason)
 
     @Connection._require_websocket_authentication
     async def notify(
-        self, info: Any, message_id: Optional[int] = None, **kwargs: Any
+        self, info: Any, message_id: int | None = None, **kwargs: Any
     ) -> None:
         await self._websocket.send(
             json.dumps(
-                [0, "n", message_id, {"type": "ucm-test", "info": info, **kwargs}]
+                [
+                    0,
+                    "n",
+                    message_id,
+                    {"type": "ucm-test", "info": info, **kwargs},
+                ]
             )
         )
 
     @Connection._require_websocket_authentication
     async def __handle_websocket_input(self, event: str, data: Any) -> None:
-        await self._websocket.send(json.dumps([0, event, None, data], cls=JSONEncoder))
+        await self._websocket.send(
+            json.dumps([0, event, None, data], cls=JSONEncoder)
+        )
 
     def on(self, event, callback=None):
         return self.__event_emitter.on(event, callback)

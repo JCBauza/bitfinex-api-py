@@ -353,7 +353,9 @@ LoginHistory = generate_labeler_serializer(
 )
 
 BalanceAvailable = generate_labeler_serializer(
-    name="BalanceAvailable", klass=dataclasses.BalanceAvailable, labels=["amount"]
+    name="BalanceAvailable",
+    klass=dataclasses.BalanceAvailable,
+    labels=["amount"],
 )
 
 Order = generate_labeler_serializer(
@@ -444,7 +446,15 @@ Trade = generate_labeler_serializer(
 FundingTrade = generate_labeler_serializer(
     name="FundingTrade",
     klass=dataclasses.FundingTrade,
-    labels=["id", "currency", "mts_create", "offer_id", "amount", "rate", "period"],
+    labels=[
+        "id",
+        "currency",
+        "mts_create",
+        "offer_id",
+        "amount",
+        "rate",
+        "period",
+    ],
 )
 
 OrderTrade = generate_labeler_serializer(
@@ -648,7 +658,13 @@ DepositAddress = generate_labeler_serializer(
 LightningNetworkInvoice = generate_labeler_serializer(
     name="LightningNetworkInvoice",
     klass=dataclasses.LightningNetworkInvoice,
-    labels=["invoice_hash", "invoice", "_PLACEHOLDER", "_PLACEHOLDER", "amount"],
+    labels=[
+        "invoice_hash",
+        "invoice",
+        "_PLACEHOLDER",
+        "_PLACEHOLDER",
+        "amount",
+    ],
 )
 
 Movement = generate_labeler_serializer(

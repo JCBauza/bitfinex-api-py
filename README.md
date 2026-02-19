@@ -1,10 +1,10 @@
 # bitfinex-api-py
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bitfinex-api-py)](https://pypi.org/project/bitfinex-api-py/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![GitHub Action](https://github.com/bitfinexcom/bitfinex-api-py/actions/workflows/build.yml/badge.svg)
 
-Official implementation of the [Bitfinex APIs (V2)](https://docs.bitfinex.com/docs) for `Python 3.8+`.
+Official implementation of the [Bitfinex APIs (V2)](https://docs.bitfinex.com/docs) for `Python 3.10+`.
 
 ### Features
 

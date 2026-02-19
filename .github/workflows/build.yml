@@ -9,18 +9,39 @@ on:
       - master
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-
-    steps: 
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
-      - name: Install bitfinex-api-py's dependencies
-        run: python -m pip install -r dev-requirements.txt
-      - name: Run pre-commit hooks (see .pre-commit-config.yaml)
-        uses: pre-commit/action@v3.0.1
-      - name: Run mypy to ensure correct type hinting
-        run: python -m mypy bfxapi
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Run ruff linter
+        run: ruff check bfxapi/
+      - name: Run ruff formatter check
+        run: ruff format --check bfxapi/
+      - name: Run mypy type checking
+        run: mypy bfxapi/
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Verify import
+        run: python -c "import bfxapi; print('Import successful')"
+      - name: Run tests
+        run: python -m pytest tests/ -v
+      - name: Run mypy
+        run: mypy bfxapi/

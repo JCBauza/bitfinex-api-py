@@ -1,4 +1,4 @@
-from typing import Any, List, cast
+from typing import Any, cast
 
 from pyee.base import EventEmitter
 
@@ -19,7 +19,7 @@ class PublicChannelsHandler:
     def __init__(self, event_emitter: EventEmitter) -> None:
         self.__event_emitter = event_emitter
 
-    def handle(self, subscription: Subscription, stream: List[Any]) -> None:
+    def handle(self, subscription: Subscription, stream: list[Any]) -> None:
         if subscription["channel"] == "ticker":
             self.__ticker_channel_handler(cast(Ticker, subscription), stream)
         elif subscription["channel"] == "trades":
@@ -39,7 +39,7 @@ class PublicChannelsHandler:
         elif subscription["channel"] == "status":
             self.__status_channel_handler(cast(Status, subscription), stream)
 
-    def __ticker_channel_handler(self, subscription: Ticker, stream: List[Any]):
+    def __ticker_channel_handler(self, subscription: Ticker, stream: list[Any]):
         if subscription["symbol"].startswith("t"):
             return self.__event_emitter.emit(
                 "t_ticker_update",
@@ -54,7 +54,7 @@ class PublicChannelsHandler:
                 serializers.FundingCurrencyTicker.parse(*stream[0]),
             )
 
-    def __trades_channel_handler(self, subscription: Trades, stream: List[Any]):
+    def __trades_channel_handler(self, subscription: Trades, stream: list[Any]):
         if (event := stream[0]) and event in ["te", "tu", "fte", "ftu"]:
             events = {
                 "te": "t_trade_execution",
@@ -97,7 +97,7 @@ class PublicChannelsHandler:
                 ],
             )
 
-    def __book_channel_handler(self, subscription: Book, stream: List[Any]):
+    def __book_channel_handler(self, subscription: Book, stream: list[Any]):
         if subscription["symbol"].startswith("t"):
             if all(isinstance(sub_stream, list) for sub_stream in stream[0]):
                 return self.__event_emitter.emit(
@@ -132,7 +132,7 @@ class PublicChannelsHandler:
                 serializers.FundingCurrencyBook.parse(*stream[0]),
             )
 
-    def __raw_book_channel_handler(self, subscription: Book, stream: List[Any]):
+    def __raw_book_channel_handler(self, subscription: Book, stream: list[Any]):
         if subscription["symbol"].startswith("t"):
             if all(isinstance(sub_stream, list) for sub_stream in stream[0]):
                 return self.__event_emitter.emit(
@@ -167,19 +167,24 @@ class PublicChannelsHandler:
                 serializers.FundingCurrencyRawBook.parse(*stream[0]),
             )
 
-    def __candles_channel_handler(self, subscription: Candles, stream: List[Any]):
+    def __candles_channel_handler(
+        self, subscription: Candles, stream: list[Any]
+    ):
         if all(isinstance(sub_stream, list) for sub_stream in stream[0]):
             return self.__event_emitter.emit(
                 "candles_snapshot",
                 subscription,
-                [serializers.Candle.parse(*sub_stream) for sub_stream in stream[0]],
+                [
+                    serializers.Candle.parse(*sub_stream)
+                    for sub_stream in stream[0]
+                ],
             )
 
         return self.__event_emitter.emit(
             "candles_update", subscription, serializers.Candle.parse(*stream[0])
         )
 
-    def __status_channel_handler(self, subscription: Status, stream: List[Any]):
+    def __status_channel_handler(self, subscription: Status, stream: list[Any]):
         if subscription["key"].startswith("deriv:"):
             return self.__event_emitter.emit(
                 "derivatives_status_update",
@@ -195,4 +200,6 @@ class PublicChannelsHandler:
             )
 
     def __checksum_handler(self, subscription: Book, value: int):
-        return self.__event_emitter.emit("checksum", subscription, value & 0xFFFFFFFF)
+        return self.__event_emitter.emit(
+            "checksum", subscription, value & 0xFFFFFFFF
+        )

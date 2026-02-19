@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from pyee.base import EventEmitter
 
@@ -37,7 +37,7 @@ class AuthEventsHandler:
         "bu": "balance_update",
     }
 
-    __SERIALIZERS: Dict[Tuple[str, ...], serializers._Serializer] = {
+    __SERIALIZERS: dict[tuple[str, ...], serializers._Serializer] = {
         ("os", "on", "ou", "oc"): serializers.Order,
         ("ps", "pn", "pu", "pc"): serializers.Position,
         ("te", "tu"): serializers.Trade,
@@ -58,19 +58,29 @@ class AuthEventsHandler:
         elif abbrevation == "miu":
             if stream[0] == "base":
                 self.__event_emitter.emit(
-                    "base_margin_info", serializers.BaseMarginInfo.parse(*stream)
+                    "base_margin_info",
+                    serializers.BaseMarginInfo.parse(*stream),
                 )
             elif stream[0] == "sym":
                 self.__event_emitter.emit(
-                    "symbol_margin_info", serializers.SymbolMarginInfo.parse(*stream)
+                    "symbol_margin_info",
+                    serializers.SymbolMarginInfo.parse(*stream),
                 )
         else:
-            for abbrevations, serializer in AuthEventsHandler.__SERIALIZERS.items():
+            for (
+                abbrevations,
+                serializer,
+            ) in AuthEventsHandler.__SERIALIZERS.items():
                 if abbrevation in abbrevations:
                     event = AuthEventsHandler.__ABBREVIATIONS[abbrevation]
 
-                    if all(isinstance(sub_stream, list) for sub_stream in stream):
-                        data = [serializer.parse(*sub_stream) for sub_stream in stream]
+                    if all(
+                        isinstance(sub_stream, list) for sub_stream in stream
+                    ):
+                        data = [
+                            serializer.parse(*sub_stream)
+                            for sub_stream in stream
+                        ]
                     else:
                         data = serializer.parse(*stream)
 
@@ -82,13 +92,17 @@ class AuthEventsHandler:
         serializer: _Notification = _Notification[None](serializer=None)
 
         if stream[1] in ("on-req", "ou-req", "oc-req"):
-            event, serializer = f"{stream[1]}-notification", _Notification[Order](
-                serializer=serializers.Order
+            event, serializer = (
+                f"{stream[1]}-notification",
+                _Notification[Order](serializer=serializers.Order),
             )
 
         if stream[1] in ("fon-req", "foc-req"):
-            event, serializer = f"{stream[1]}-notification", _Notification[
-                FundingOffer
-            ](serializer=serializers.FundingOffer)
+            event, serializer = (
+                f"{stream[1]}-notification",
+                _Notification[FundingOffer](
+                    serializer=serializers.FundingOffer
+                ),
+            )
 
         self.__event_emitter.emit(event, serializer.parse(*stream))

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Generic, List, Optional, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 from .labeler import _Serializer, _Type
 
@@ -10,9 +10,9 @@ T = TypeVar("T")
 class Notification(_Type, Generic[T]):
     mts: int
     type: str
-    message_id: Optional[int]
+    message_id: int | None
     data: T
-    code: Optional[int]
+    code: int | None
     status: str
     text: str
 
@@ -30,7 +30,7 @@ class _Notification(_Serializer, Generic[T]):
     ]
 
     def __init__(
-        self, serializer: Optional[_Serializer] = None, is_iterable: bool = False
+        self, serializer: _Serializer | None = None, is_iterable: bool = False
     ):
         super().__init__("Notification", Notification, _Notification.__LABELS)
 
@@ -42,7 +42,7 @@ class _Notification(_Serializer, Generic[T]):
         )
 
         if isinstance(self.serializer, _Serializer):
-            data = cast(List[Any], notification.data)
+            data = cast(list[Any], notification.data)
 
             if not self.is_iterable:
                 if len(data) == 1 and isinstance(data[0], list):

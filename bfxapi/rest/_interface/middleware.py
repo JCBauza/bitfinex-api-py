@@ -3,7 +3,7 @@ import hmac
 import json
 from datetime import datetime
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, List, NoReturn, Optional
+from typing import TYPE_CHECKING, Any, NoReturn
 
 import requests
 
@@ -27,7 +27,10 @@ class Middleware:
     __TIMEOUT = 30
 
     def __init__(
-        self, host: str, api_key: Optional[str] = None, api_secret: Optional[str] = None
+        self,
+        host: str,
+        api_key: str | None = None,
+        api_secret: str | None = None,
     ):
         self.__host = host
 
@@ -35,7 +38,7 @@ class Middleware:
 
         self.__api_secret = api_secret
 
-    def get(self, endpoint: str, params: Optional["_Params"] = None) -> Any:
+    def get(self, endpoint: str, params: "_Params | None" = None) -> Any:
         headers = {"Accept": "application/json"}
 
         if self.__api_key and self.__api_secret:
@@ -58,12 +61,15 @@ class Middleware:
     def post(
         self,
         endpoint: str,
-        body: Optional[Any] = None,
-        params: Optional["_Params"] = None,
+        body: Any | None = None,
+        params: "_Params | None" = None,
     ) -> Any:
         _body = body and json.dumps(body, cls=JSONEncoder) or None
 
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
 
         if self.__api_key and self.__api_secret:
             headers = {
@@ -86,7 +92,7 @@ class Middleware:
 
         return data
 
-    def __handle_error(self, error: List[Any]) -> NoReturn:
+    def __handle_error(self, error: list[Any]) -> NoReturn:
         if error[1] == _Error.ERR_PARAMS:
             raise RequestParameterError(
                 "The request was rejected with the following parameter "
@@ -98,7 +104,11 @@ class Middleware:
                 "Can't authenticate with given API-KEY and API-SECRET."
             )
 
-        if not error[1] or error[1] == _Error.ERR_UNK or error[1] == _Error.ERR_GENERIC:
+        if (
+            not error[1]
+            or error[1] == _Error.ERR_UNK
+            or error[1] == _Error.ERR_GENERIC
+        ):
             raise GenericError(
                 "The request was rejected with the following generic "
                 f"error: <{error[2]}>."
@@ -108,7 +118,9 @@ class Middleware:
             f"The request was rejected with an unexpected error: <{error}>."
         )
 
-    def __get_authentication_headers(self, endpoint: str, data: Optional[str] = None):
+    def __get_authentication_headers(
+        self, endpoint: str, data: str | None = None
+    ):
         assert self.__api_key and self.__api_secret
 
         nonce = str(round(datetime.now().timestamp() * 1_000_000))

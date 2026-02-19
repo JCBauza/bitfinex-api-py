@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .labeler import _Type
 
@@ -148,7 +148,7 @@ class Leaderboard(_Type):
     username: str
     ranking: int
     value: float
-    twitter_handle: Optional[str]
+    twitter_handle: str | None
 
 
 @dataclass
@@ -204,14 +204,14 @@ class UserInfo(_Type):
     ppt_enabled: int
     merchant_enabled: int
     competition_enabled: int
-    two_factors_authentication_modes: List[str]
+    two_factors_authentication_modes: list[str]
     is_securities_master: int
     securities_enabled: int
     allow_disable_ctxswitch: int
     time_last_login: int
     ctxtswitch_disabled: int
-    comp_countries: List[str]
-    compl_countries_resid: List[str]
+    comp_countries: list[str]
+    compl_countries_resid: list[str]
     is_merchant_enterprise: int
 
 
@@ -220,7 +220,7 @@ class LoginHistory(_Type):
     id: int
     time: int
     ip: str
-    extra_info: Dict[str, Any]
+    extra_info: dict[str, Any]
 
 
 @dataclass
@@ -251,7 +251,7 @@ class Order(_Type):
     hidden: int
     placed_id: int
     routing: str
-    meta: Dict[str, Any]
+    meta: dict[str, Any]
 
 
 @dataclass
@@ -272,7 +272,7 @@ class Position(_Type):
     type: int
     collateral: float
     collateral_min: float
-    meta: Dict[str, Any]
+    meta: dict[str, Any]
 
 
 @dataclass
@@ -412,7 +412,7 @@ class Wallet(_Type):
     unsettled_interest: float
     available_balance: float
     last_change: str
-    trade_details: Dict[str, Any]
+    trade_details: dict[str, Any]
 
 
 @dataclass
@@ -497,7 +497,7 @@ class PositionClaim(_Type):
     pos_type: int
     collateral: str
     min_collateral: str
-    meta: Dict[str, Any]
+    meta: dict[str, Any]
 
 
 @dataclass
@@ -563,7 +563,7 @@ class PositionAudit(_Type):
     type: int
     collateral: float
     collateral_min: float
-    meta: Dict[str, Any]
+    meta: dict[str, Any]
 
 
 @dataclass

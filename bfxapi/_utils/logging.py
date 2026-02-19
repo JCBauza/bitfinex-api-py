@@ -1,7 +1,7 @@
 import sys
 from copy import copy
 from logging import FileHandler, Formatter, Logger, LogRecord, StreamHandler
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     _Level = Literal["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
@@ -40,7 +40,7 @@ class _ColorFormatter(Formatter):
 
         return super().format(_record)
 
-    def formatTime(self, record: LogRecord, datefmt: Optional[str] = None) -> str:
+    def formatTime(self, record: LogRecord, datefmt: str | None = None) -> str:
         return _GREEN + super().formatTime(record, datefmt) + _NC
 
     @staticmethod

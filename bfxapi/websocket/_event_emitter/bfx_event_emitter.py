@@ -1,12 +1,12 @@
 from asyncio import AbstractEventLoop
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from collections.abc import Callable
+from typing import Any, overload
 
+from pyee import Handler
 from pyee.asyncio import AsyncIOEventEmitter
 
 from bfxapi.websocket.exceptions import UnknownEventError
-
-_Handler = TypeVar("_Handler", bound=Callable[..., None])
 
 _ONCE_PER_CONNECTION = [
     "open",
@@ -80,12 +80,12 @@ _COMMON = [
 class BfxEventEmitter(AsyncIOEventEmitter):
     _EVENTS = _ONCE_PER_CONNECTION + _ONCE_PER_SUBSCRIPTION + _COMMON
 
-    def __init__(self, loop: Optional[AbstractEventLoop] = None) -> None:
+    def __init__(self, loop: AbstractEventLoop | None = None) -> None:
         super().__init__(loop)
 
-        self._connection: List[str] = []
+        self._connection: list[str] = []
 
-        self._subscriptions: Dict[str, List[str]] = defaultdict(lambda: [])
+        self._subscriptions: dict[str, list[str]] = defaultdict(lambda: [])
 
     def emit(self, event: str, *args: Any, **kwargs: Any) -> bool:
         if event in _ONCE_PER_CONNECTION:
@@ -104,14 +104,23 @@ class BfxEventEmitter(AsyncIOEventEmitter):
 
         return super().emit(event, *args, **kwargs)
 
+    @overload
+    def on(self, event: str) -> Callable[[Handler], Handler]: ...
+
+    @overload
+    def on(self, event: str, f: Handler) -> Handler: ...
+
     def on(
-        self, event: str, f: Optional[_Handler] = None
-    ) -> Union[_Handler, Callable[[_Handler], _Handler]]:
+        self, event: str, f: Handler | None = None
+    ) -> Handler | Callable[[Handler], Handler]:
         if event not in BfxEventEmitter._EVENTS:
             raise UnknownEventError(
                 f"Can't register to unknown event: <{event}> (to get a full "
                 "list of available events see https://docs.bitfinex.com/)."
             )
+
+        if f is None:
+            return super().on(event)
 
         return super().on(event, f)
 
