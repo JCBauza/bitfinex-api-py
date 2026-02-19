@@ -2,7 +2,7 @@
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bitfinex-api-py)](https://pypi.org/project/bitfinex-api-py/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-![GitHub Action](https://github.com/bitfinexcom/bitfinex-api-py/actions/workflows/build.yml/badge.svg)
+![GitHub Action](https://github.com/JCBauza/bitfinex-api-py/actions/workflows/build.yml/badge.svg)
 
 Official implementation of the [Bitfinex APIs (V2)](https://docs.bitfinex.com/docs) for `Python 3.10+`.
 
@@ -302,7 +302,7 @@ All contributions are welcome! :D
 
 A guide on how to install and set up `bitfinex-api-py`'s source code can be found [here](#installation-and-setup). \
 Before opening any pull requests, please have a look at [Before Opening a PR](#before-opening-a-pr). \
-Contributors must uphold the [Contributor Covenant code of conduct](https://github.com/bitfinexcom/bitfinex-api-py/blob/master/CODE_OF_CONDUCT.md).
+Contributors must uphold the [Contributor Covenant code of conduct](https://github.com/JCBauza/bitfinex-api-py/blob/master/CODE_OF_CONDUCT.md).
 
 ### Index
 
@@ -316,41 +316,36 @@ Contributors must uphold the [Contributor Covenant code of conduct](https://gith
 
 ## Installation and setup
 
-A brief guide on how to install and set up the project in your Python 3.8+ environment.
+A brief guide on how to install and set up the project in your Python 3.10+ environment.
 
 ### Cloning the repository
 
 ```console
-git clone https://github.com/bitfinexcom/bitfinex-api-py.git
+git clone https://github.com/JCBauza/bitfinex-api-py.git
 ```
 
 ### Installing the dependencies
 
 ```console
-python3 -m pip install -r dev-requirements.txt
+python3 -m pip install -e ".[dev]"
 ```
 
-Make sure to install `dev-requirements.txt` (and not `requirements.txt`!). \
-`dev-requirements.txt` will install all dependencies in `requirements.txt` plus any development dependency. \
-dev-requirements includes [mypy](https://github.com/python/mypy), [black](https://github.com/psf/black), [isort](https://github.com/PyCQA/isort), [flake8](https://github.com/PyCQA/flake8), and [pre-commit](https://github.com/pre-commit/pre-commit) (more on these tools in later chapters).
+This installs the package in editable mode along with all development dependencies, including [mypy](https://github.com/python/mypy), [ruff](https://github.com/astral-sh/ruff), [pytest](https://github.com/pytest-dev/pytest), and [pre-commit](https://github.com/pre-commit/pre-commit).
 
-All done, your Python 3.8+ environment should now be able to run `bitfinex-api-py`'s source code.
+All done, your Python 3.10+ environment should now be able to run `bitfinex-api-py`'s source code.
 
 ### Set up the pre-commit hooks (optional)
 
 **Do not skip this paragraph if you intend to contribute to the project.**
 
-This repository includes a pre-commit configuration file that defines the following hooks:
-1. [isort](https://github.com/PyCQA/isort)
-2. [black](https://github.com/psf/black)
-3. [flake8](https://github.com/PyCQA/flake8)
+This repository includes a pre-commit configuration file that runs [ruff](https://github.com/astral-sh/ruff) for both linting and formatting.
 
 To set up pre-commit use:
 ```console
 python3 -m pre-commit install
 ```
 
-These will ensure that isort, black and flake8 are run on each git commit.
+This will ensure that ruff is run on each git commit.
 
 [Visit this page to learn more about git hooks and pre-commit.](https://pre-commit.com/#introduction)
 
@@ -367,7 +362,7 @@ python3 -m pre-commit run --all-files
 
 Wheter you're submitting a bug fix, a new feature or a documentation change, you should first discuss it in an issue.
 
-You must be able to check off all tasks listed in [PULL_REQUEST_TEMPLATE](https://raw.githubusercontent.com/bitfinexcom/bitfinex-api-py/master/.github/PULL_REQUEST_TEMPLATE.md) before opening a pull request.
+You must be able to check off all tasks listed in [PULL_REQUEST_TEMPLATE](https://raw.githubusercontent.com/JCBauza/bitfinex-api-py/master/.github/PULL_REQUEST_TEMPLATE.md) before opening a pull request.
 
 ### Tip
 

@@ -44,9 +44,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/bitfinexcom/bitfinex-api-py"
-"Bug Reports" = "https://github.com/bitfinexcom/bitfinex-api-py/issues"
-Source = "https://github.com/bitfinexcom/bitfinex-api-py"
+Homepage = "https://github.com/JCBauza/bitfinex-api-py"
+"Bug Reports" = "https://github.com/JCBauza/bitfinex-api-py/issues"
+Source = "https://github.com/JCBauza/bitfinex-api-py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["bfxapi"]
