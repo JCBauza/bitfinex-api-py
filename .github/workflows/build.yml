@@ -11,7 +11,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, Build]
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python 3.13
@@ -28,7 +28,7 @@ jobs:
         run: mypy bfxapi/
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, Build]
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python 3.13
