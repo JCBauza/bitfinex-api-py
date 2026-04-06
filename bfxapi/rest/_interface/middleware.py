@@ -87,28 +87,7 @@ class Middleware:
         except requests.Timeout as e:
             raise NetworkError(f"Request timeout: {e}") from e
 
-        self.last_rate_limit = RateLimitInfo.from_headers(
-            dict(response.headers)
-        )
-
-        if response.status_code == 429:
-            reset = self.last_rate_limit.reset
-            retry_ms = (
-                (reset - int(datetime.now().timestamp())) * 1000
-                if reset
-                else 60_000
-            )
-            raise RateLimitError(
-                "Rate limit exceeded (HTTP 429)",
-                retry_after_ms=max(retry_ms, 1000),
-            )
-
-        data = response.json(cls=JSONDecoder)
-
-        if isinstance(data, list) and len(data) > 0 and data[0] == "error":
-            self.__handle_error(data)
-
-        return data
+        return self.__process_response(response)
 
     def post(
         self,
@@ -142,6 +121,9 @@ class Middleware:
         except requests.Timeout as e:
             raise NetworkError(f"Request timeout: {e}") from e
 
+        return self.__process_response(response)
+
+    def __process_response(self, response: requests.Response) -> Any:
         self.last_rate_limit = RateLimitInfo.from_headers(
             dict(response.headers)
         )

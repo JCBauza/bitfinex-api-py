@@ -14,6 +14,13 @@ from bfxapi.websocket.subscriptions import (
 
 _CHECKSUM = "cs"
 
+_TRADE_EVENTS: dict[str, str] = {
+    "te": "t_trade_execution",
+    "tu": "t_trade_execution_update",
+    "fte": "f_trade_execution",
+    "ftu": "f_trade_execution_update",
+}
+
 
 class PublicChannelsHandler:
     def __init__(self, event_emitter: EventEmitter) -> None:
@@ -59,17 +66,10 @@ class PublicChannelsHandler:
     def __trades_channel_handler(
         self, subscription: Trades, stream: list[Any]
     ) -> None:
-        if (event := stream[0]) and event in ["te", "tu", "fte", "ftu"]:
-            events = {
-                "te": "t_trade_execution",
-                "tu": "t_trade_execution_update",
-                "fte": "f_trade_execution",
-                "ftu": "f_trade_execution_update",
-            }
-
+        if (event := stream[0]) and event in _TRADE_EVENTS:
             if subscription["symbol"].startswith("t"):
                 self.__event_emitter.emit(
-                    events[event],
+                    _TRADE_EVENTS[event],
                     subscription,
                     serializers.TradingPairTrade.parse(*stream[1]),
                 )
@@ -77,7 +77,7 @@ class PublicChannelsHandler:
 
             if subscription["symbol"].startswith("f"):
                 self.__event_emitter.emit(
-                    events[event],
+                    _TRADE_EVENTS[event],
                     subscription,
                     serializers.FundingCurrencyTrade.parse(*stream[1]),
                 )

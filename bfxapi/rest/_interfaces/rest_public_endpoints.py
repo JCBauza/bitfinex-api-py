@@ -297,9 +297,9 @@ class RestPublicEndpoints(Interface):
         end: str | None = None,
         limit: int | None = None,
     ) -> list[Candle]:
-        params = {"sort": sort, "start": start, "end": end, "limit": limit}
-        data = self._m.get(f"candles/trade:{tf}:{symbol}/hist", params=params)
-        return [serializers.Candle.parse(*sub_data) for sub_data in data]
+        return self.get_candles_hist(
+            symbol, tf, sort=sort, start=start, end=end, limit=limit
+        )
 
     def get_leaderboards_hist(
         self,

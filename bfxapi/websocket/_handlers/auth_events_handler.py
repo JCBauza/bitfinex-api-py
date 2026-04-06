@@ -38,16 +38,21 @@ class AuthEventsHandler:
         "bu": "balance_update",
     }
 
-    __SERIALIZERS: dict[tuple[str, ...], _Serializer[Any]] = {
-        ("os", "on", "ou", "oc"): serializers.Order,
-        ("ps", "pn", "pu", "pc"): serializers.Position,
-        ("te", "tu"): serializers.Trade,
-        ("fos", "fon", "fou", "foc"): serializers.FundingOffer,
-        ("fcs", "fcn", "fcu", "fcc"): serializers.FundingCredit,
-        ("fls", "fln", "flu", "flc"): serializers.FundingLoan,
-        ("ws", "wu"): serializers.Wallet,
-        ("fiu",): serializers.FundingInfo,
-        ("bu",): serializers.BalanceInfo,
+    # Flattened for O(1) lookup per message (was O(n) iterating grouped tuples)
+    __SERIALIZERS: dict[str, _Serializer[Any]] = {
+        abbr: ser
+        for abbrs, ser in {
+            ("os", "on", "ou", "oc"): serializers.Order,
+            ("ps", "pn", "pu", "pc"): serializers.Position,
+            ("te", "tu"): serializers.Trade,
+            ("fos", "fon", "fou", "foc"): serializers.FundingOffer,
+            ("fcs", "fcn", "fcu", "fcc"): serializers.FundingCredit,
+            ("fls", "fln", "flu", "flc"): serializers.FundingLoan,
+            ("ws", "wu"): serializers.Wallet,
+            ("fiu",): serializers.FundingInfo,
+            ("bu",): serializers.BalanceInfo,
+        }.items()
+        for abbr in abbrs
     }
 
     def __init__(self, event_emitter: EventEmitter) -> None:
@@ -68,24 +73,21 @@ class AuthEventsHandler:
                     serializers.SymbolMarginInfo.parse(*stream),
                 )
         else:
-            for (
-                abbrevations,
-                serializer,
-            ) in AuthEventsHandler.__SERIALIZERS.items():
-                if abbrevation in abbrevations:
-                    event = AuthEventsHandler.__ABBREVIATIONS[abbrevation]
+            serializer = AuthEventsHandler.__SERIALIZERS.get(abbrevation)
+            if serializer is not None:
+                event = AuthEventsHandler.__ABBREVIATIONS[abbrevation]
 
-                    if all(
-                        isinstance(sub_stream, list) for sub_stream in stream
-                    ):
-                        data: Any = [
-                            serializer.parse(*sub_stream)
-                            for sub_stream in stream
-                        ]
-                    else:
-                        data = serializer.parse(*stream)
+                if all(
+                    isinstance(sub_stream, list) for sub_stream in stream
+                ):
+                    data: Any = [
+                        serializer.parse(*sub_stream)
+                        for sub_stream in stream
+                    ]
+                else:
+                    data = serializer.parse(*stream)
 
-                    self.__event_emitter.emit(event, data)
+                self.__event_emitter.emit(event, data)
 
     def __notification(self, stream: Any) -> None:
         event: str = "notification"

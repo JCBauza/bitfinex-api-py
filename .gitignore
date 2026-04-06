@@ -1,18 +1,33 @@
 .venv
+venv/
 .DS_Store
+Thumbs.db
 .vscode
+.idea
+.vim
+*.swp
+*.swo
 .python-version
 __pycache__
 
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build / packaging
 bitfinex_api_py.egg-info
 bitfinex_api_py.dist-info
 build/
 dist/
 pip-wheel-metadata/
 .eggs
+
+# Test / lint caches
 .coverage
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
 *.log
-
-.idea
-
-venv/

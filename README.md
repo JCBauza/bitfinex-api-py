@@ -4,7 +4,7 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![GitHub Action](https://github.com/JCBauza/bitfinex-api-py/actions/workflows/build.yml/badge.svg)
 
-Official implementation of the [Bitfinex APIs (V2)](https://docs.bitfinex.com/docs) for `Python 3.10+`.
+Official implementation of the [Bitfinex APIs (V2)](https://docs.bitfinex.com/docs) for `Python 3.12+`.
 
 ### Features
 
@@ -316,7 +316,7 @@ Contributors must uphold the [Contributor Covenant code of conduct](https://gith
 
 ## Installation and setup
 
-A brief guide on how to install and set up the project in your Python 3.10+ environment.
+A brief guide on how to install and set up the project in your Python 3.12+ environment.
 
 ### Cloning the repository
 
@@ -332,7 +332,7 @@ python3 -m pip install -e ".[dev]"
 
 This installs the package in editable mode along with all development dependencies, including [mypy](https://github.com/python/mypy), [ruff](https://github.com/astral-sh/ruff), [pytest](https://github.com/pytest-dev/pytest), and [pre-commit](https://github.com/pre-commit/pre-commit).
 
-All done, your Python 3.10+ environment should now be able to run `bitfinex-api-py`'s source code.
+All done, your Python 3.12+ environment should now be able to run `bitfinex-api-py`'s source code.
 
 ### Set up the pre-commit hooks (optional)
 
