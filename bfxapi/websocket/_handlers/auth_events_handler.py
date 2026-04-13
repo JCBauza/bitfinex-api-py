@@ -39,19 +39,21 @@ class AuthEventsHandler:
     }
 
     # Flattened for O(1) lookup per message (was O(n) iterating grouped tuples)
+    _GROUPED: dict[tuple[str, ...], _Serializer[Any]] = {
+        ("os", "on", "ou", "oc"): serializers.Order,
+        ("ps", "pn", "pu", "pc"): serializers.Position,
+        ("te", "tu"): serializers.Trade,
+        ("fos", "fon", "fou", "foc"): serializers.FundingOffer,
+        ("fcs", "fcn", "fcu", "fcc"): serializers.FundingCredit,
+        ("fls", "fln", "flu", "flc"): serializers.FundingLoan,
+        ("ws", "wu"): serializers.Wallet,
+        ("fiu",): serializers.FundingInfo,
+        ("bu",): serializers.BalanceInfo,
+    }
+
     __SERIALIZERS: dict[str, _Serializer[Any]] = {
         abbr: ser
-        for abbrs, ser in {
-            ("os", "on", "ou", "oc"): serializers.Order,
-            ("ps", "pn", "pu", "pc"): serializers.Position,
-            ("te", "tu"): serializers.Trade,
-            ("fos", "fon", "fou", "foc"): serializers.FundingOffer,
-            ("fcs", "fcn", "fcu", "fcc"): serializers.FundingCredit,
-            ("fls", "fln", "flu", "flc"): serializers.FundingLoan,
-            ("ws", "wu"): serializers.Wallet,
-            ("fiu",): serializers.FundingInfo,
-            ("bu",): serializers.BalanceInfo,
-        }.items()
+        for abbrs, ser in _GROUPED.items()
         for abbr in abbrs
     }
 

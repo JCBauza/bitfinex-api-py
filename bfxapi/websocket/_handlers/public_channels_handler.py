@@ -66,7 +66,7 @@ class PublicChannelsHandler:
     def __trades_channel_handler(
         self, subscription: Trades, stream: list[Any]
     ) -> None:
-        if (event := stream[0]) and event in _TRADE_EVENTS:
+        if isinstance(stream[0], str) and (event := stream[0]) in _TRADE_EVENTS:
             if subscription["symbol"].startswith("t"):
                 self.__event_emitter.emit(
                     _TRADE_EVENTS[event],

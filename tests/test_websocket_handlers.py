@@ -853,9 +853,9 @@ class TestAuthEventsHandlerAbbreviations:
 
     def test_all_abbreviations_have_serializers(self):
         abbrevs = AuthEventsHandler._AuthEventsHandler__ABBREVIATIONS
-        serializer_abbrevs = set()
-        for keys in AuthEventsHandler._AuthEventsHandler__SERIALIZERS:
-            serializer_abbrevs.update(keys)
+        serializer_abbrevs = set(
+            AuthEventsHandler._AuthEventsHandler__SERIALIZERS.keys()
+        )
 
         for abbrev in abbrevs:
             assert abbrev in serializer_abbrevs, (
