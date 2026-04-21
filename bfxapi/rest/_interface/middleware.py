@@ -1,11 +1,27 @@
 import hashlib
 import hmac
 import json
+import threading
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, NoReturn
+
+_NONCE_LOCK = threading.Lock()
+_NONCE_LAST = 0
+
+
+def _next_nonce() -> str:
+    """Monotonic microsecond nonce. Guards against duplicates when two calls
+    hit the same microsecond tick under concurrent use (H8 fix)."""
+    global _NONCE_LAST
+    with _NONCE_LOCK:
+        candidate = time.time_ns() // 1_000
+        if candidate <= _NONCE_LAST:
+            candidate = _NONCE_LAST + 1
+        _NONCE_LAST = candidate
+    return str(candidate)
 
 import requests
 
@@ -196,7 +212,7 @@ class Middleware:
     ) -> dict[str, str]:
         assert self.__api_key and self.__api_secret
 
-        nonce = str(time.time_ns() // 1_000)
+        nonce = _next_nonce()
 
         if not data:
             message = f"/api/v2/{endpoint}{nonce}"
