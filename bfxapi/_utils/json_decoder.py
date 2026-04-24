@@ -13,4 +13,8 @@ def _object_hook(data: dict[str, Any]) -> Any:
 
 class JSONDecoder(json.JSONDecoder):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        # requests uses simplejson as `complexjson` when installed; simplejson
+        # passes an obsolete `encoding` kwarg that stdlib json.JSONDecoder
+        # rejects on Python 3.9+ (confirmed failure on 3.12).
+        kwargs.pop("encoding", None)
         super().__init__(*args, **kwargs, object_hook=_object_hook)
