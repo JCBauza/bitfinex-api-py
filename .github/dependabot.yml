@@ -5,6 +5,9 @@ updates:
     schedule:
       interval: "weekly"
     groups:
+      all-security:
+        applies-to: security-updates
+        patterns: ["*"]
       all-dependencies:
         patterns: ["*"]
     runs-on: "ubuntu-latest"
@@ -13,6 +16,9 @@ updates:
     schedule:
       interval: "weekly"
     groups:
+      all-security:
+        applies-to: security-updates
+        patterns: ["*"]
       all-actions:
         patterns: ["*"]
     runs-on: "ubuntu-latest"
