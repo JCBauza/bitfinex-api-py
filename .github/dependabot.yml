@@ -10,7 +10,6 @@ updates:
         patterns: ["*"]
       all-dependencies:
         patterns: ["*"]
-    runs-on: "ubuntu-latest"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -21,4 +20,3 @@ updates:
         patterns: ["*"]
       all-actions:
         patterns: ["*"]
-    runs-on: "ubuntu-latest"
