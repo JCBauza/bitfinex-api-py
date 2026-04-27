@@ -1,0 +1,20 @@
+# =============================================================================
+# Gitleaks Configuration
+# =============================================================================
+# Mirrors the BfxLendingBot pattern: useDefault rules + minimal path
+# allowlist. Currently no false positives on this repo's working tree;
+# extend `paths` or add `regexes` here if findings surface in CI.
+# =============================================================================
+
+[extend]
+useDefault = true
+
+[allowlist]
+  description = "Global allowlist"
+  paths = [
+    # Standard ignores
+    '''\.gitleaksignore''',
+    '''\.env\.example''',
+    '''\.env\.local''',
+  ]
+  regexTarget = "line"
