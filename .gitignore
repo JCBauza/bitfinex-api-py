@@ -31,3 +31,6 @@ htmlcov/
 .ruff_cache/
 
 *.log
+
+# Per-session git worktrees (autonomy-contract.md doctrine, scratch space only).
+.worktrees/
